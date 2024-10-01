@@ -1,0 +1,77 @@
+﻿
+@page "/videogames"
+@inject HttpClient Http
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@inject NavigationManager NavigationManager
+
+<PageTitle>Video Juegos</PageTitle>
+
+<h1>Video Juegos</h1>
+
+<p>Este componente demuestra como mostrar datos.</p>
+
+@if (videoGames.Count == 0)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Publisher</th>
+                <th>Release Year</th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var videoGame in videoGames)
+            {
+                <tr>
+                    <td>@videoGame.Title</td>
+                    <td>@videoGame.Publisher</td>
+                    <td>@videoGame.ReleaseYear</td>
+                    <td><button class="btn btn-primary" @onclick="@(() => EditGame(videoGame.Id))" >Editar</button></td>
+                    <td><button class="btn btn-danger" @onclick="@(() => DeleteGame(videoGame.Id))">Eliminar</button></td>
+
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+<button class="btn btn-primary" @onclick="AddGame">Agregar un nuevo juego</button>
+@code {
+    List<VideoGame> videoGames = new List<VideoGame>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Simulate asynchronous loading to demonstrate streaming rendering
+        await LoadGames();
+    }
+
+    void AddGame()
+    {
+        NavigationManager.NavigateTo("edit-game");
+    }
+
+    void EditGame(int id)
+    {
+        NavigationManager.NavigateTo($"edit-game/{id}");
+    }
+
+    async Task DeleteGame(int id)
+    {
+        await Http.DeleteAsync($"api/videogames/{id}");
+        await LoadGames();
+    }
+
+    async Task LoadGames()
+    {
+        var result = await Http.GetFromJsonAsync<List<VideoGame>>("api/videogames");
+        if (result is not null)
+            videoGames = result;
+    
+    }
+}
